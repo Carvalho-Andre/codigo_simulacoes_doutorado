@@ -1,0 +1,2409 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2638
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 TimesNewRomanPS-BoldMT;\f1\froman\fcharset0 TimesNewRomanPSMT;\f2\fmodern\fcharset0 CourierNewPSMT;
+\f3\fmodern\fcharset0 CourierNewPS-BoldMT;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sl480\sa320\qj\partightenfactor0
+
+\f0\b\fs32 \cf2 \expnd0\expndtw0\kerning0
+C\'f3digo base de simula\'e7\'e3o
+\f1\b0 \
+\pard\pardeftab720\sa320\qj\partightenfactor0
+
+\f2\fs26\fsmilli13333 \cf2 import enum
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import utils as utl
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 if __name__ == "__main__":
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0 config = utl.EnumResult()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 # =============== PARAMETERIZATION =======================================
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 simulation_name = 'Teste2-B-EGO-COMPLEX-S4'#'FB001-simples-03'#'Simmons-Complex-f10'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 num_simulations = 1
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 gamma = 0.4 ## este \'e9 o par\'e2metro de cont\'e1gio manipulado
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 beta = 0.3
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 tmax = 30 ##tempo m\'e1ximo de simula\'e7\'e3o
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 R_0 = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 # Ego - Bowdoin47 - Haverford76 - Simmons81 - FB01 - FB02 - FB03 - FB04
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 facebook_base_model = config.get(utl.BaseModel.BOWDOIN) ##topologias
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 # fast_sir - complex_contagion
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 simulation_type = config.get(utl.SimulationType.COMPLEX_CONTAGION)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 # ========================================================================
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 utl.generate_sim(facebook_base_model, gamma, beta, R_0, tmax, simulation_name, num_simulations, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+\pard\pardeftab720\sl480\sa320\qj\partightenfactor0
+
+\f0\b \cf2 C\'f3digo de simula\'e7\'e3o do cont\'e1gio SIR
+\f1\b0 \
+\pard\pardeftab720\sa320\qj\partightenfactor0
+
+\f2\fs26\fsmilli13333 \cf2 import os
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import EoN
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import sys
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import uuid
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import enum
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import random
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import platform
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 from time import time
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import networkx as nx
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 from tabulate import tabulate
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import matplotlib.pyplot as plt
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 from pymongo import MongoClient
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 from collections import defaultdict
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 base_path = 'simulation_result' if platform.system() == 'Linux' else 'C:/simulation_result'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 @enum.unique
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class ProcessStatus(enum.IntEnum):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 success = 0\'a0\'a0\'a0\'a0 # Indicates successful program completion.\'a0\'a0\'a0 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 failure = 101\'a0\'a0 # Indicates unsuccessful program completion in a general sense
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 metada_without_audio = 102\'a0\'a0 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 audio_without_info = 103
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 audio_not_eligible = 104
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 transcription_failure = 105
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 transcriber_failure = 106 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 metadata_missing = 107
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 audio_not_converted_to_mp3 = 108
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 insert_item_sql_segmentos_error = 109
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 exectue_proc_sql_criasegmentos_erro = 110
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class DataBase():
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 uri = "mongodb://root:apzVz53vKVcF@191.238.212.204"
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def __init__(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 pass
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def connect_db(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.conn = MongoClient(self.uri, connect=False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.db = self.conn['graph']
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def this_simulation_exists(self, sim_name):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.connect_db()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 coll = self.db['summary']
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 item = coll.find_one(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{"simulation_name": sim_name\}, \{'_id'\})
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.conn.close()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return False if item == None else True
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def insert_summary(self, summary):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.connect_db()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 coll = self.db['summary']
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 coll.insert_one(summary)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.conn.close()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def insert_simulation(self, simulation):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 \'a0\'a0\'a0\'a0self.connect_db()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 coll = self.db['simulation']
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 coll.insert_one(simulation)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.conn.close()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class Base():
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def __init__(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = 0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.round_len = 5
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def end_log(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 end = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return end - self.start_time
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def log_with_time(self, msg, is_start=True):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if is_start:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(msg)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 elapsed = self.end_log()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print('\{:>40s\}\'a0\'a0\'a0\'a0 \{:\}'.format(msg, elapsed))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def query_yes_no(self, question, default="yes"):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 valid = \{"yes": True, "y": True, "ye": True, "no": False, "n": False\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if default is None:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 prompt = " [y/n] "
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif default == "yes":
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 prompt = " [Y/n] "
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif default == "no":
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 prompt = " [y/N] "
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 raise ValueError("invalid default answer: '%s'" % default)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 while True:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 sys.stdout.write(question + prompt)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 choice = input().lower()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if default is not None and choice == '':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return valid[default]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif choice in valid:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return valid[choice]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 sys.stdout.write(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 "Please respond with 'yes' or 'no' (or 'y' or 'n').\\n")
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class Simulation():
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def __init__(self, num_simulations, simulation_name):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.num_simulations = num_simulations
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.simulation_name = simulation_name
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def generate_folder(self, path):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 os.mkdir(path)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def initialize(self, graph):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 db = DataBase()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if db.this_simulation_exists(self.simulation_name):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\n\{"\uc0\u9552 "*100\}\\n')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'Simulation \\
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{self.simulation_name\} already exists. Enter another name.')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\n\{"\uc0\u9552 "*100\}\\n')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return False
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.graph = graph
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.generate_folder(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 f'\{base_path\}/\{self.simulation_name\}')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return True
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def simulate(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0 \'a0\'a0\'a0start_time_global = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.graph.simulation_name = self.simulation_name
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 for i in range(0, self.num_simulations):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\n\{"\uc0\u9552 "*100\}\\nIniciando simula\'e7\'e3o \\
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{i+1\} de \{self.num_simulations\}: \{self.simulation_name\}\\n')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 path = f"\{base_path\}/\{self.simulation_name\}/\{f'\{i\}'.rjust(10,'0')\}"
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.generate_folder(path)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0self.graph.path = path
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.graph.iteration_number = i+1
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # self.graph.edges_configuration()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.graph.simulation_in_graph()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 end_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\nSimula\'e7\'e3o \{i+1\} conclu\'edda em \\
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\{end_time - start_time\} seconds')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 end_time_global = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elapsed = end_time_global - start_time_global
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\n\{"\uc0\u9608 "*100\}\\n\\n')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'Finalizando a simula\'e7\'e3o e gravando a sumariza\'e7\'e3o...')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #print("\\n%40s\'a0\'a0\'a0 %s" % ('General Process', 'Time'))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #print("%40s\'a0\'a0\'a0 %s" % ('='*40, '='*25))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.graph.save_summary(elapsed, self.num_simulations)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\nSimula\'e7\'e3o \{self.simulation_name\} conclu\'edda em\\
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{elapsed\} seconds\\n')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class Stats(Base):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def __init__(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 super().__init__()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def density(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \'a0density = round(nx.density(G), self.round_len)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except nx.NetworkXError as e:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 density = str(e)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Density', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return density
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def radius(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 radius = round(nx.radius(G), self.round_len)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except nx.NetworkXError as e:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 radius = str(e)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Radius', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return radius
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def diameter(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 diameter = round(nx.diameter(G), self.round_len)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except nx.NetworkXError as e:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 diameter = str(e)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Diameter', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return diameter
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def average_shortest_path(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 average_shortest_path = round(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 nx.average_shortest_path_length(G), self.round_len)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except nx.NetworkXError as e:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 average_shortest_path = str(e)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Average shortest path length', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return average_shortest_path
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def average_degree(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G_deg = nx.degree_histogram(G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G_deg_sum = [a * b for a, b in zip(G_deg, range(0, len(G_deg)))]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 average_degree = round(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 sum(G_deg_sum) / G.number_of_nodes(), self.round_len)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Average Degree', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return average_degree
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def betweenness_centrality(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run betweenness centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 k = int(float(G.number_of_nodes()) / 100 * float(10))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #betweenness_dict = nx.betweenness_centrality(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 betweenness_dict = nx.betweenness_centrality(G, k=k)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Betweenness centrality', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return betweenness_dict
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def closeness_centrality(self, G, _is):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run closeness centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 closeness_dict = \{\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 for g in _is:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 closeness_dict[g] = nx.closeness_centrality(G, u=g)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Closeness centrality', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return closeness_dict
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def degree_centrality(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run degree centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 degree_dict = nx.degree_centrality(G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Degree centrality', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return degree_dict
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def eigenvector_centrality(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run eigenvector centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 eigenvector_dict = nx.eigenvector_centrality(G, max_iter=1000)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Eigenvector centrality', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return eigenvector_dict
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def clustering_coefficient(self, G):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run clustering coefficient
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 clustering_dict = nx.clustering(G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Clustering coefficient', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return clustering_dict
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class Graph(Base):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def __init__(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 super().__init__()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.path = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.simulation_name = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.calculated_statistics = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.is_real_network = False
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.iteration_number = 0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def print_configuration_result(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 \'a0\'a0\'a0\'a0self.stats = Stats()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print('M\'e9tricas iniciais da rede...')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\n\{nx.info(self.G)\}')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("\\n%40s\'a0\'a0\'a0 %s" % ('Process', 'Time'))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("%40s\'a0\'a0\'a0 %s" % ('='*40, '='*25))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run density, diameter & radius network
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.density = self.stats.density(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.diameter = self.stats.diameter(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.radius = self.stats.radius(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run calculating average shortest path length
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0 \'a0\'a0\'a0\'a0\'a0\'a0self.average_shortest_path = self.stats.average_shortest_path(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run average degree
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.average_degree = self.stats.average_degree(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 is_connected = nx.is_connected(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except Exception as e:\'a0 # nx.NetworkXError as e:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 is_connected = str(e)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 number_connected_components = nx.number_connected_components(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except Exception as e:\'a0 # nx.NetworkXError as e:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 number_connected_components = str(e)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 table = [
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{'metric': 'Density', 'result': self.density\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{'metric': 'Diameter', 'result': self.diameter\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\{'metric': 'Radius', 'result': self.radius\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{'metric': 'Average Shortest_path', 'result': self.average_shortest_path\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{'metric': 'Average Degree', 'result': self.average_degree\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{'metric': 'This Graph is connected?', 'result': is_connected\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{'metric': 'Number of different connected components', 'result': number_connected_components\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 ]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'\\n\{tabulate(table, headers="keys", tablefmt="github")\}')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def configuration(self, network, gamma, beta, R_0, tmax, simulation_type):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G = network
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.gamma = gamma
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.beta = beta
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.R_0 = R_0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0 \'a0\'a0\'a0\'a0\'a0self.tmax = tmax
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.simulation_type = simulation_type
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.print_configuration_result()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def create_net_erdos_renyi(self, nodes, probability):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'erdos_renyi_gnp'\'a0\'a0\'a0\'a0\'a0\'a0\'a0 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G = nx.gnp_random_graph(nodes, probability)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 isolates = list(nx.isolates(G))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if len(isolates) > 0:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return G.remove_nodes_from(list(nx.isolates(G)))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return G
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def create_net_barabasi_albert(self, nodes, edges):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'barabasi_albert'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G = nx.barabasi_albert_graph(nodes, edges)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 isolates = list(nx.isolates(G))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if len(isolates) > 0:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return G.remove_nodes_from(list(nx.isolates(G)))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return G
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def create_net_watts_strogatz(self, nodes, edges, probability):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'watts_strogatz'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G = nx.watts_strogatz_graph(nodes, edges, probability)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 isolates = list(nx.isolates(G))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if len(isolates) > 0:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return G.remove_nodes_from(list(nx.isolates(G)))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return G
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def create_net_facebook(self, model_id):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.is_real_network = True
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #self.netowrk_model = f'facebook-\{model_id\}'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #["Ego", "Bowdoin47", "Haverford76", "Simmons81"] 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if model_id == 'Ego':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'snap-Ego'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 #return nx.read_edgelist("../data/facebook_combined.txt.gz", create_using=nx.Graph(), nodetype=int)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf("../data/facebook_combined.gexf")
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif model_id == 'Bowdoin47':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'socfb-Bowdoin47'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0#return nx.read_adjlist("../data/socfb-Bowdoin47.mtx", create_using=nx.DiGraph(), nodetype=int)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf("../data/socfb-Bowdoin47.gexf")
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif model_id == 'Haverford76':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'socfb-Haverford76'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 #return nx.read_adjlist("../data/socfb-Haverford76.mtx", create_using=nx.DiGraph(), nodetype=int)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf("../data/socfb-Haverford76.gexf")
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif model_id == 'Simmons81':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'socfb-Simmons81'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 #return nx.read_adjlist("../data/socfb-Simmons81.mtx", create_using=nx.DiGraph(), nodetype=int) 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf("../data/socfb-Simmons81.gexf")
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif model_id == 'Facebook01':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'fb-01'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf('../data/fb1.gexf')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif model_id == 'Facebook02':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'fb-02'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf('../data/fb2.gexf') 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif model_id == 'Facebook03':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'fb-03'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf('../data/fb3.gexf') 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif model_id == 'Facebook04':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'fb-04'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return nx.read_gexf('../data/fb4.gexf')\'a0\'a0\'a0\'a0\'a0\'a0\'a0 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def create_net_twitter(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.is_real_network = True
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.netowrk_model = 'twitter'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0 \'a0\'a0\'a0return nx.read_edgelist("../data/twitter_combined.txt.gz", create_using=nx.Graph(), nodetype=int)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def edges_configuration(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Iniciando configura\'e7\'e3o dos n\'f3s')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 w = [random.random() for i in range(self.G.number_of_edges())]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 s = max(w)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 k = 0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 w = [i/s for i in w]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 for i, j in self.G.edges():
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G[i][j]['weight'] = w[k]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 k += 1
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 labels = \{\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 for i in list(self.G.nodes):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 labels[i] = i
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #labels = [dict(\{i, i\}) for i in list(self.G.nodes)]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 edgewidth = [d['weight'] for (u, v, d) in self.G.edges(data=True)]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 nx_kwargs = \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 "with_labels": True,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 "pos": nx.spring_layout(self.G),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # "pos": nx.circular_layout(self.G),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 "width": edgewidth,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 "alpha": 0.7,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 "labels": labels
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 \}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.nx_kwargs = nx_kwargs
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Configura\'e7\'e3o dos n\'f3s conclu\'edda', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def save_sir(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print('Gerando imagem SIR')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt.figure(figsize=(12, 6))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt.plot(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.summary[0], self.summary[1]['S'],
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 label="S", linewidth=3, color='g', alpha=0.5)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt.plot(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.summary[0], self.summary[1]['I'],
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 label="I", linewidth=3, color='r', alpha=0.5)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt.plot(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.summary[0], self.summary[1]['R'],
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0label="R", linewidth=3, color='b', alpha=0.5)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt.legend()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt.savefig(f'\{self.path\}/sir.png')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 plt.close()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def get_initial_infecteds(self, simulation):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return [i for i in range(simulation.G.number_of_nodes()) if simulation.node_status(i, 0) == 'I']
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except Exception:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def save_summary(self, elapsed, num_simulations):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 db = DataBase()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 db.insert_summary(\{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 '_id': str(uuid.uuid4()),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'simulation_name': str(self.simulation_name),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'num_simulations': num_simulations,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'elapsed_time': round(elapsed, self.round_len),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'netowrk_model': self.netowrk_model,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0'number_of_nodes': self.G.number_of_nodes(),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'number_of_edges': self.G.number_of_edges(),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'density': self.density,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'diameter': self.diameter,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'radius': self.radius,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'gamma': self.gamma,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'beta': self.beta,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'tmax': self.tmax,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'R0': self.R_0,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'simulation_type': self.simulation_type,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'average_degree': self.average_degree,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'average_shortest_path': self.average_shortest_path,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'is_real_network': self.is_real_network
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 \})
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def run_stats(self, betweenness, closeness, degree, eigenvector, clustering, _is):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 stats = []
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 for i in _is:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 stats.append(\{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'node': i,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'degree_centrality': round(degree[i], self.round_len),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'closeness_centrality': round(closeness[i], self.round_len),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'betweenness_centrality': round(betweenness[i], self.round_len),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'eigenvector_centrality': round(eigenvector[i], self.round_len),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'clustering_coefficient': round(clustering[i], self.round_len),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \})
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return stats
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def statistics(self, sim):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 _is = self.get_initial_infecteds(sim)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print(f'N\'f3s iniciais infectados: \{_is\}')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("\\n%40s\'a0\'a0\'a0 %s" % ('Process', 'Time'))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print("%40s\'a0\'a0\'a0 %s" % ('='*40, '='*25))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 stats = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if _is != None:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if self.calculated_statistics == None:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run betweenness centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 betweenness_dict = self.stats.betweenness_centrality(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run closeness centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 closeness_dict = self.stats.closeness_centrality(self.G, _is)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run degree centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 degree_dict = self.stats.degree_centrality(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run eigenvector centrality
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 eigenvector_dict = self.stats.eigenvector_centrality(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # Run clustering coefficient
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 clustering_dict = self.stats.clustering_coefficient(self.G)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if self.is_real_network == True:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if self.calculated_statistics == None:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.calculated_statistics = self.run_stats(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 betweenness_dict, closeness_dict, degree_dict, eigenvector_dict, clustering_dict, _is)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 stats = self.calculated_statistics
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 stats = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 stats = self.run_stats(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 betweenness_dict, closeness_dict, degree_dict, eigenvector_dict, clustering_dict, _is)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.calculated_statistics = None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 element, tmax = self.get_tmax(self.summary)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 db = DataBase()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 db.insert_simulation(\{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 '_id': str(uuid.uuid4()),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'simulation_name': str(self.simulation_name),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'iteration_number': self.iteration_number,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'max_infection_time': tmax,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'max_infection_len': element,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'T0': \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'S': int(self.summary[1]['S'][0]),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'I': int(self.summary[1]['I'][0])
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'TMAX': \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0'S': int(self.summary[1]['S'][-1:][0]),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'I': int(self.summary[1]['I'][-1:][0]),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'R': int(self.summary[1]['R'][-1:][0])
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'stats': stats
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 \})
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Salvando no banco de dados', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def get_tmax(self, sim):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 lst = list(sim[1]['I'])
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 element = int(max(lst))
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return element, lst.index(element)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def generate_gexf(self, sim):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 try:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 status = sim.get_statuses(time=self.tmax)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 last_iteration = \{\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 for i in range(self.G.number_of_nodes()):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 last_iteration[i] = status[i]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Obt\'e9m as informa\'e7\'f5es da \'faltima itera\'e7\'e3o', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.start_time = time()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 pos = nx.spring_layout(self.G, dim=4, scale=1000)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 for node in self.G.nodes:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 status = last_iteration[node]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G.nodes[node]['label'] = f'\{node\}_\{status\}'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G.nodes[node]['viz'] = \{'size': 10\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if status == 'S':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G.nodes[node]['viz']['color'] = \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'a': 0.5, 'r': 0, 'g': 100, 'b': 0\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif status == 'I':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G.nodes[node]['viz']['color'] = \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'a': 1, 'r': 255, 'g': 0, 'b': 0\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0self.G.nodes[node]['viz']['color'] = \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'a': 0.15, 'r': 100, 'g': 100, 'b': 100\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G.nodes[node]['viz']['position'] = \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'x': pos[node][0], 'y': pos[node][1], 'z': 5\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 nx.write_gexf(self.G, f'\{self.path\}/network.gexf')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.log_with_time('Successfully generated GEXF file', False)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 except:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 pass
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def rate_function(self, G, node, status, parameters):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 tau,gamma = parameters
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if status[node] == 'I':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return gamma
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif status[node] == 'S':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return tau*len([nbr for nbr in G.neighbors(node) if status[nbr] == 'I'])
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return 0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def transition_choice(self, G, node, status, parameters):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if status[node] == 'I':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return 'R'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif status[node] == 'S':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return 'I'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def get_influence_set(self, G, node, status, parameters):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return \{nbr for nbr in G.neighbors(node) if status[nbr] == 'S'\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def simulation_in_graph(self):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print('Iniciando simula\'e7\'e3o EoN')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 sim=None
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if self.simulation_type == 'fast_sir':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 #R_0 = self.I_0/self.population
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 sim = EoN.fast_SIR(self.G,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 tau=self.beta,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 gamma=self.gamma,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 rho=self.R_0,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 # transmission_weight="weight",
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return_full_data=True,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 tmax=self.tmax)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 elif self.simulation_type == 'complex_contagion':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 IC = defaultdict(lambda: 'S')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 for node in range(2):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 IC[random.choice(list(self.G.nodes))] = 'I'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 sim = EoN.Gillespie_complex_contagion(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.G, 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.rate_function,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.transition_choice, 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0self.get_influence_set, 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 IC,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return_statuses=('S', 'I', 'R'),
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 parameters=(self.beta, self.gamma), 
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 return_full_data=True,
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 tmax=self.tmax)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print('Simula\'e7\'e3o EoN finalizada')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.summary = sim.summary()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.save_sir()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #print('Gerando arquivos')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 # self.generate_files(sim)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print('Gerando as estat\'edsticas da rede')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.statistics(sim)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 self.generate_gexf(sim)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+\pard\pardeftab720\sa320\qj\partightenfactor0
+
+\f3\b\fs26\fsmilli13333 \cf2 C\'d3DIGO PARA MODELAR AS REDES DE CONT\'c1GIO
+\f1\b0\fs32 \
+\pard\pardeftab720\sa320\qj\partightenfactor0
+
+\f2\fs26\fsmilli13333 \cf2 import net_sir_sim as sim
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 import enum
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class EnumResult():
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 def get(self, msg):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 return msg.value
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 @enum.unique
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class BaseModel(enum.Enum):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 EGO='Ego'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 BOWDOIN='Bowdoin47'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 HAVERFORD='Haverford76'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 SIMMONS='Simmons81'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 FB01='Facebook01'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 FB02='Facebook02'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 FB03='Facebook03'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 FB04='Facebook04'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 TWITTER='Twitter'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 @enum.unique
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 class SimulationType(enum.Enum):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 FAST_SIR='fast_sir'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 COMPLEX_CONTAGION='complex_contagion'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 def simule(gamma, beta, R_0, tmax, simulation_name, num_simulations, model, base_model, param, simulation_type):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 graph = sim.Graph()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 if model == 'facebook':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G = graph.create_net_facebook(model_id=base_model)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 elif model == 'twitter':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G = graph.create_net_twitter()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 elif model == 'watts_strogatz':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0 \'a0\'a0\'a0\'a0\'a0\'a0G = graph.create_net_watts_strogatz(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 nodes=param['watts_strogatz']['nodes'],
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 edges=param['watts_strogatz']['edges'],
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 probability=param['watts_strogatz']['probability'])
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 elif model == 'barabasi_albert':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G = graph.create_net_barabasi_albert(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 nodes=param['barabasi_albert']['nodes'],
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 edges=param['barabasi_albert']['edges'])
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 elif model == 'erdos_renyi':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 G = graph.create_net_erdos_renyi(
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 nodes=param['erdos_renyi']['nodes'],
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 probability=param['erdos_renyi']['probability'])
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 graph.configuration(G, gamma, beta, R_0, tmax, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 simulation = sim.Simulation(num_simulations, simulation_name)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 if simulation.initialize(graph):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 simulation.simulate()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 def generate_sim(base_model, gamma, beta, R_0, tmax, simulation_name, num_simulations, simulation_type):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 base = sim.Base()
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 if base.query_yes_no("\\nDeseja prosseguir na simula\'e7\'e3o?", None):
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 ntwrks = ["Ego", "Bowdoin47", "Haverford76", "Simmons81", "Facebook01", "Facebook02", "Facebook03", "Facebook04", "Twitter"]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 parametrs = [
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0'model': 'Ego',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 4039, 'edges': 45, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 4039, 'edges': 22\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 4039, 'probability': 0.01083\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \'a0\'a0\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Bowdoin47',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 2252, 'edges': 75, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 2252, 'edges': 37\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 2252, 'probability': 0.0331\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Haverford76',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 1446, 'edges': 83, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 1446, 'edges': 42\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 1446, 'probability': 0.05683\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Simmons81',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 1518, 'edges': 44, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 1518, 'edges': 22\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 1518, 'probability': 0.02883\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Facebook01',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 168, 'edges': 2, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 168, 'edges': 1\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 168, 'probability': 0.012\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Facebook02',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 333, 'edges': 32, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 333, 'edges': 16\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 333, 'probability': 0.09\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Facebook03',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 224, 'edges': 2, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 224, 'edges': 1\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 224, 'probability': 0.009\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Facebook04',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 59, 'edges': 4, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 59, 'edges': 2\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 59, 'probability': 0.058\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \{
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'model': 'Twitter',
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'watts_strogatz': \{'nodes': 81306, 'edges': 34, 'probability': 0.4\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'barabasi_albert': \{'nodes': 81306, 'edges': 17\},
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 'erdos_renyi': \{'nodes': 81306, 'probability': 0.00044\}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 \}
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 ]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 idx = ntwrks.index(base_model)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 param = parametrs[idx]
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 simulation_name = f'\{simulation_name\}-\{base_model\}'
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 if base_model == 'Twitter':
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 simule(gamma, beta, R_0, tmax, f'\{simulation_name\}-twitter', num_simulations, 'twitter', base_model, param, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 simule(gamma, beta, R_0, tmax, f'\{simulation_name\}-facebook', num_simulations, 'facebook', base_model, param, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 #simule(gamma, beta, R_0, tmax, f'\{simulation_name\}-facebook', num_simulations, 'facebook', base_model, param, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 simule(gamma, beta, R_0, tmax, f'\{simulation_name\}-watts_strogatz', num_simulations, 'watts_strogatz', base_model, param, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 simule(gamma, beta, R_0, tmax, f'\{simulation_name\}-barabasi_albert', num_simulations, 'barabasi_albert', base_model, param, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 simule(gamma, beta, R_0, tmax, f'\{simulation_name\}-erdos_renyi', num_simulations, 'erdos_renyi', base_model, param, simulation_type)
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0 else:
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0\'a0\'a0\'a0\'a0\'a0\'a0 print('Simula\'e7\'e3o abortada!!!')
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+
+\f2\fs26\fsmilli13333 \'a0
+\f1\fs32 \
+}
